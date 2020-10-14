@@ -13,27 +13,35 @@ import axios from 'axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {FileSystem, Permissions} from 'react-native-unimodules';
 import CameraRoll from '@react-native-community/cameraroll';
+import {SearchBar} from 'react-native-elements';
 
 import ImageItem from '../components/Image';
 
 const HomeScreen = () => {
   const [loading, setLoading] = useState(true);
   const [images, setImages] = useState([]);
-  const [scale, setScale] = useState(new Animated.Value(1));
+  const [query, setQuery] = useState('');
   const [focus, setFocus] = useState(false);
 
   useEffect(() => {
     retrieveWallpapers();
   }, []);
 
+  const updateSearch = (search) => {
+    setQuery(search);
+  };
+
   const retrieveWallpapers = async () => {
     await axios
       .get(
-        'https://api.unsplash.com/photos/random?count=30&client_id=VWy65HkEf3-gDzKm2lr3eLp8u751dAs262VmNBV32hs',
+        `https://api.unsplash.com/photos/random?count=30&client_id=VWy65HkEf3-gDzKm2lr3eLp8u751dAs262VmNBV32hs&query=${
+          query ? query : 'wallpaper'
+        }`,
       )
       .then(function (res) {
         setImages(res.data);
         setLoading(false);
+        setQuery('');
       })
       .catch(function (error) {
         console.log(error);
@@ -41,22 +49,6 @@ const HomeScreen = () => {
       .finally(function () {
         console.log('Finished');
       });
-  };
-
-  const showControls = (item) => {
-    console.log(focus);
-    setFocus(!focus),
-      () => {
-        if (focus) {
-          Animated.spring(scale, {
-            toValue: 0.8,
-          }).start();
-        } else {
-          Animated.spring(scale, {
-            toValue: 1,
-          }).start();
-        }
-      };
   };
 
   const saveWallpaper = async (image) => {
@@ -135,14 +127,21 @@ const HomeScreen = () => {
         style={styles.indicator}></ActivityIndicator>
     </View>
   ) : (
-    <View style={styles.container}>
-      <FlatList
-        scrollEnabled={!focus}
-        horizontal
-        pagingEnabled
-        data={images}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}></FlatList>
+    <View style={{flex: 1, inputStyle: 'white'}}>
+      <SearchBar
+        placeholder="Search"
+        onChangeText={updateSearch}
+        value={query}
+      />
+      <View style={styles.container}>
+        <FlatList
+          scrollEnabled={!focus}
+          horizontal
+          pagingEnabled
+          data={images}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}></FlatList>
+      </View>
     </View>
   );
 };
